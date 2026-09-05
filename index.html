@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RINA AI - AI Assistant untuk Kreator Digital">
+  <title>RINA AI — AI Assistant untuk Kreator Digital</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+      color: #172033;
+      background: #f7f9fc;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    nav {
+      max-width: 1100px;
+      margin: auto;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .logo span {
+      color: #635bff;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #374151;
+      margin-left: 22px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: #635bff;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #eef2ff, #ffffff);
+      text-align: center;
+      padding: 100px 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 8vw, 76px);
+      line-height: 1.05;
+      margin-bottom: 20px;
+      color: #111827;
+    }
+
+    .hero h1 span {
+      color: #635bff;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: auto;
+      font-size: 20px;
+      color: #4b5563;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 14px 26px;
+      border-radius: 10px;
+      background: #635bff;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    section {
+      max-width: 1100px;
+      margin: auto;
+      padding: 80px 24px;
+    }
+
+    section h2 {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 18px;
+      color: #111827;
+    }
+
+    .section-intro {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 45px;
+      color: #6b7280;
+    }
+
+    .about {
+      background: #ffffff;
+    }
+
+    .about-box {
+      max-width: 800px;
+      margin: auto;
+      font-size: 17px;
+      color: #4b5563;
+      text-align: center;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+    }
+
+    .icon {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      color: #111827;
+    }
+
+    .card p {
+      color: #6b7280;
+      font-size: 15px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .step {
+      text-align: center;
+      padding: 25px;
+    }
+
+    .number {
+      width: 45px;
+      height: 45px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: #635bff;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .cta {
+      text-align: center;
+      background: #111827;
+      color: white;
+      max-width: none;
+    }
+
+    .cta h2 {
+      color: white;
+    }
+
+    .cta p {
+      color: #d1d5db;
+      max-width: 650px;
+      margin: auto;
+    }
+
+    footer {
+      background: #0b1120;
+      color: #9ca3af;
+      text-align: center;
+      padding: 35px 20px;
+    }
+
+    footer strong {
+      color: white;
+    }
+
+    footer a {
+      color: #c7d2fe;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    .copyright {
+      margin-top: 18px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 800px) {
+      .features {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      nav a {
+        margin: 0 7px;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding: 70px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <nav>
+      <div class="logo">RINA<span> AI</span></div>
+
+      <div>
+        <a href="#tentang">Tentang</a>
+        <a href="#fitur">Fitur</a>
+        <a href="#cara-kerja">Cara Kerja</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <h1>RINA <span>AI</span></h1>
+
+      <p>
+        AI Assistant untuk Kreator Digital.
+        Membantu membuat, mengelola, dan mengembangkan
+        konten media sosial secara lebih terstruktur.
+      </p>
+
+      <a class="button" href="#fitur">Jelajahi RINA AI</a>
+    </section>
+
+    <section id="tentang" class="about">
+      <h2>Tentang RINA AI</h2>
+
+      <p class="section-intro">
+        RINA AI dirancang sebagai asisten digital untuk membantu
+        kreator mengelola proses pembuatan dan pengembangan konten.
+      </p>
+
+      <div class="about-box">
+        <p>
+          RINA AI membantu pengguna menemukan ide konten,
+          menyiapkan materi, mengelola publikasi media sosial,
+          dan memahami performa konten.
+        </p>
+
+        <br>
+
+        <p>
+          Integrasi dengan platform media sosial dilakukan melalui
+          mekanisme resmi dan otorisasi pengguna. RINA AI hanya
+          menggunakan akses yang diberikan oleh pengguna.
+        </p>
+      </div>
+    </section>
+
+    <section id="fitur">
+      <h2>Fitur Utama</h2>
+
+      <p class="section-intro">
+        Satu asisten untuk membantu berbagai tahapan workflow konten.
+      </p>
+
+      <div class="features">
+
+        <div class="card">
+          <div class="icon">💡</div>
+          <h3>Ide Konten</h3>
+          <p>
+            Membantu menemukan dan mengembangkan ide konten
+            berdasarkan tujuan kreator.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icon">🎬</div>
+          <h3>Pembuatan Konten</h3>
+          <p>
+            Membantu menyiapkan konsep, naskah, dan materi
+            untuk kebutuhan konten digital.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icon">📱</div>
+          <h3>Media Sosial</h3>
+          <p>
+            Membantu mengelola workflow publikasi melalui
+            integrasi resmi dengan platform yang didukung.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="icon">📊</div>
+          <h3>Analitik</h3>
+          <p>
+            Membantu membaca performa konten dan memberikan
+            informasi untuk pengembangan strategi berikutnya.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="cara-kerja">
+      <h2>Cara Kerja</h2>
+
+      <p class="section-intro">
+        RINA AI dirancang untuk membantu kreator dari ide hingga evaluasi.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="number">1</div>
+          <h3>Rencanakan</h3>
+          <p>
+            RINA AI membantu menemukan ide dan menyusun konsep konten.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="number">2</div>
+          <h3>Buat</h3>
+          <p>
+            Materi konten disiapkan sesuai konsep dan kebutuhan platform.
+          </p>
+        </div>
+
+        <div class="step">
+          <div class="number">3</div>
+          <h3>Evaluasi</h3>
+          <p>
+            Performa konten dapat dipelajari untuk membantu
+            pengembangan konten berikutnya.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Membangun Kreator Digital yang Lebih Cerdas</h2>
+
+      <p>
+        RINA AI dikembangkan secara bertahap untuk menjadi
+        asisten digital yang semakin mampu membantu workflow kreator.
+      </p>
+
+      <a class="button" href="#tentang">Pelajari RINA AI</a>
+    </section>
+
+  </main>
+
+  <footer>
+    <p><strong>RINA AI</strong></p>
+
+    <p>
+      <a href="privacy.html">Kebijakan Privasi</a>
+      <a href="terms.html">Syarat dan Ketentuan</a>
+    </p>
+
+    <p class="copyright">
+      © 2026 RINA AI. All rights reserved.
+    </p>
+  </footer>
+
+</body>
+  </html>
