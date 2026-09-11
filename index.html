@@ -532,10 +532,10 @@
         return;
       }
       if (!connected) return;
-      const r = await fetch(API + "/tiktok/preflight", { cache: "no-store" });
+      const r = await fetch(API + "/tiktok/automation/status", { cache: "no-store" });
       const data = await r.json();
-      if (data.status === "ready") {
-        status.textContent = "Konten siap. Publikasi Direct Post menunggu persetujuan App Review TikTok.";
+      if (data.status === "ready" && data.token_saved && data.daily_queue_saved) {
+        status.textContent = "TikTok terhubung dan konten harian siap. Direct Post menunggu persetujuan App Review TikTok.";
         status.className = "tiktok-note tiktok-ready";
       } else {
         status.textContent = "Publikasi belum siap: " + (data.reasons || [data.reason || "periksa kembali konfigurasi"]).join(", " );
