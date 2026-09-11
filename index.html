@@ -213,6 +213,14 @@
       margin-top: 15px;
     }
 
+    .connected-status { display:flex; justify-content:center; align-items:center; gap:10px; margin:18px auto 22px; flex-wrap:wrap; }
+    .connected-status strong { color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; padding:7px 12px; border-radius:999px; }
+    .connected-status span { color:#6b7280; font-size:13px; }
+    #shareTikTokButton { border:0; cursor:pointer; font:inherit; }
+    #shareTikTokButton:disabled { opacity:.6; cursor:not-allowed; }
+    .tiktok-ready { color:#047857 !important; }
+    .tiktok-warning { color:#b45309 !important; }
+
     .cta {
       text-align: center;
       background: #111827;
@@ -424,33 +432,37 @@
 
 
     <section id="tiktok" class="tiktok">
-      <h2>Integrasi TikTok</h2>
-
+      <h2>TikTok Connected</h2>
       <p class="section-intro">
-        Hubungkan akun TikTok Anda dengan RINA AI melalui
-        otorisasi resmi TikTok.
+        Akun TikTok Anda telah terhubung melalui otorisasi resmi TikTok.
       </p>
 
       <div class="tiktok-box">
         <div class="tiktok-icon">🎵</div>
 
-        <h3>Hubungkan TikTok</h3>
+        <div class="connected-status">
+          <strong>✓ TikTok Connected</strong>
+          <span>Account authorized</span>
+        </div>
+
+        <h3>RINA daily video.mp4</h3>
 
         <p>
-          RINA AI menggunakan Login Kit untuk menghubungkan
-          akun TikTok dan API Posting Konten untuk membantu
-          membagikan video yang Anda setujui.
+          Konten siap dibagikan ke akun TikTok Anda.
+          Anda tetap memiliki kontrol dan memberikan persetujuan
+          sebelum proses pengiriman dimulai.
         </p>
 
-        <a
+        <button
           class="button"
-          href="https://rina-tiktok-backend.rinaolivia2531.workers.dev/tiktok/login"
+          id="shareTikTokButton"
+          type="button"
         >
-          Login dengan TikTok
-        </a>
+          Bagikan ke TikTok
+        </button>
 
-        <p class="tiktok-note">
-          Anda akan diarahkan ke TikTok untuk memberikan izin.
+        <p class="tiktok-note" id="tiktokShareStatus">
+          Klik tombol di atas untuk memulai proses berbagi.
         </p>
       </div>
     </section>
@@ -480,6 +492,66 @@
       © 2026 RINA AI. All rights reserved.
     </p>
   </footer>
+
+<script>
+(function () {
+  const API = "https://rina-tiktok-backend.rinaolivia2531.workers.dev";
+  const button = document.getElementById("shareTikTokButton");
+  const status = document.getElementById("tiktokShareStatus");
+  const params = new URLSearchParams(window.location.search);
+  if (!button || !status) return;
+
+  async function checkConnection() {
+    try {
+      const r = await fetch(API + "/tiktok/oauth/status", { cache: "no-store" });
+      const data = await r.json();
+      if (data.status !== "ready" || !data.token_saved) {
+        button.textContent = "Login dengan TikTok";
+        status.textContent = "TikTok belum terhubung. Klik tombol untuk memberikan otorisasi resmi TikTok.";
+        status.className = "tiktok-note tiktok-warning";
+        return false;
+      }
+      button.textContent = "Bagikan ke TikTok";
+      status.textContent = params.get("tiktok") === "connected" ? "TikTok berhasil terhubung. Memeriksa kesiapan konten..." : "TikTok terhubung. Memeriksa kesiapan konten...";
+      status.className = "tiktok-note tiktok-ready";
+      return true;
+    } catch (e) {
+      status.textContent = "Status TikTok belum dapat diperiksa.";
+      return false;
+    }
+  }
+
+  button.addEventListener("click", async function () {
+    button.disabled = true;
+    status.textContent = "Memeriksa kesiapan publikasi...";
+    status.className = "tiktok-note";
+    try {
+      const connected = await checkConnection();
+      if (!connected) {
+        window.location.href = API + "/tiktok/login";
+        return;
+      }
+      if (!connected) return;
+      const r = await fetch(API + "/tiktok/preflight", { cache: "no-store" });
+      const data = await r.json();
+      if (data.status === "ready") {
+        status.textContent = "Konten siap. Publikasi Direct Post menunggu persetujuan App Review TikTok.";
+        status.className = "tiktok-note tiktok-ready";
+      } else {
+        status.textContent = "Publikasi belum siap: " + (data.reasons || [data.reason || "periksa kembali konfigurasi"]).join(", " );
+        status.className = "tiktok-note tiktok-warning";
+      }
+    } catch (e) {
+      status.textContent = "Gagal memeriksa kesiapan publikasi.";
+      status.className = "tiktok-note tiktok-warning";
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  checkConnection();
+})();
+</script>
 
 </body>
   </html>
