@@ -301,7 +301,6 @@
         <a href="#tentang">Tentang</a>
         <a href="#fitur">Fitur</a>
         <a href="#cara-kerja">Cara Kerja</a>
-        <a href="#produk">Produk</a>
         <a href="#tiktok">TikTok</a>
       </div>
     </nav>
@@ -431,22 +430,6 @@
       </div>
     </section>
 
-
-    <section id="produk" class="about">
-      <h2>RINA CV PRO</h2>
-      <p class="section-intro">
-        Produk digital pertama RINA — CV profesional + surat lamaran yang disesuaikan dengan posisi yang dilamar.
-      </p>
-      <div class="features">
-        <div class="card"><div class="icon">📄</div><h3>CV Profesional</h3><p>Format DOCX + PDF, disusun dari data yang diberikan pelanggan.</p></div>
-        <div class="card"><div class="icon">🎯</div><h3>Disesuaikan Posisi</h3><p>Isi CV diarahkan agar lebih relevan dengan posisi yang dituju.</p></div>
-        <div class="card"><div class="icon">🔄</div><h3>1x Revisi</h3><p>Perbaikan satu kali setelah draft pertama selesai.</p></div>
-        <div class="card"><div class="icon">💰</div><h3>Rp35.000</h3><p>Produk digital dengan proses order dan delivery yang dilindungi payment gate.</p></div>
-      </div>
-      <div style="text-align:center;margin-top:32px">
-        <p>Untuk order, gunakan channel RINA yang tersedia dan ketik <strong>BELI</strong>.</p>
-      </div>
-    </section>
 
     <section id="tiktok" class="tiktok">
       <h2>TikTok Connected</h2>
