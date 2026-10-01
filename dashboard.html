@@ -26,7 +26,7 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 </style>
 </head>
 <body>
-<header><div class="logo">RINA<span> AI</span></div><span class="badge wait">CONTROL CENTER — PREPARATION</span></header>
+<header><div class="logo">RINA<span> AI</span></div><span class="badge ok">CONTROL CENTER — CLOUD</span></header>
 <div class="layout">
 <aside><nav>
 <button class="active">💬 Chat</button>
@@ -69,12 +69,14 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div class="row"><span>Self-Healing</span><span class="badge">DESIGN</span></div>
 </section>
 </main></div><script>
-const API='http://127.0.0.1:8765';
+const API='https://vpjwawmeszcwfjyefgms.supabase.co/functions/v1/rina-content-api';
+const API_KEY='sb_publishable_rLmRpjftumtGc2pOOFLBBA_n-KaxRnB';
+const apiFetch=(path,options={})=>fetch(API+path,{...options,headers:{'apikey':API_KEY,'Authorization':'Bearer '+API_KEY,...(options.headers||{})},cache:'no-store'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function loadRinaLibrary(){
  const list=document.getElementById('libraryList');
  try{
-  const r=await fetch(API+'/creator/library?limit=50',{cache:'no-store'}); if(!r.ok) throw Error(r.status);
+  const r=await apiFetch('/library?limit=50'); if(!r.ok) throw Error(r.status);
   const d=await r.json(), a=d.items||[];
   document.querySelector('.grid .card:nth-child(1) .value').textContent=a.length?'READY':'EMPTY';
   document.querySelector('.grid .card:nth-child(1) .muted').textContent=a.length+' Content Package';
@@ -90,19 +92,19 @@ async function loadRinaLibrary(){
 async function openContent(platform,id){
  const box=document.getElementById('contentDetail'); box.style.display='block'; box.innerHTML='<div class="muted">Memuat detail…</div>';
  try{
-  const r=await fetch(API+'/creator/content/'+encodeURIComponent(platform)+'/'+encodeURIComponent(id)); if(!r.ok) throw Error(r.status);
-  const d=await r.json(), m=d.metadata||{}, q=d.qc||{}, p=d.publish||{};
-  const media=API+'/creator/media/'+encodeURIComponent(platform)+'/'+encodeURIComponent(id);
+  const r=await apiFetch('/content/'+encodeURIComponent(id)+'/'+encodeURIComponent(platform)); if(!r.ok) throw Error(r.status);
+  const d=await r.json(), m=d.item||{}, a=m.artifact||{};
+  const media=m.asset_url||m.cover_url||'';
   const type=String(m.media_type||'').toLowerCase();
-  const preview=type.includes('image')?`<img class="media-preview" src="${media}" alt="Content preview">`:`<video class="media-preview" controls preload="metadata" src="${media}"></video>`;
-  box.innerHTML=`<div class="library-detail"><h3>${esc(m.title||id)}</h3>${preview}<div class="detail-grid" style="margin-top:12px">
-   <div class="detail-box"><strong>Status</strong><pre>${esc(m.factory_status||d.status||'DRAFT')} · ${m.ready_for_uploader?'READY_TO_POST':'NOT_READY'}</pre></div>
-   <div class="detail-box"><strong>QC</strong><pre>${esc(q.status||'UNKNOWN')} · ${esc(q.resolution||'')}</pre></div>
-   <div class="detail-box"><strong>Script / Hook</strong><pre>${esc(m.script||m.hook||'—')}</pre></div>
-   <div class="detail-box"><strong>Caption</strong><pre>${esc(m.caption||'—')}</pre></div>
-   <div class="detail-box"><strong>Description</strong><pre>${esc(m.description||'—')}</pre></div>
-   <div class="detail-box"><strong>Hashtags</strong><pre>${esc(Array.isArray(m.hashtags)?m.hashtags.join(' '):m.hashtags||'—')}</pre></div>
-  </div></div>`;
+  const preview=type.includes('image')?'<img class="media-preview" src="'+esc(media)+'" alt="Content preview">':'<video class="media-preview" controls preload="metadata" src="'+esc(media)+'"></video>';
+  box.innerHTML='<div class="library-detail"><h3>'+esc(m.title||id)+'</h3>'+preview+'<div class="detail-grid" style="margin-top:12px">'+
+   '<div class="detail-box"><strong>Status</strong><pre>'+esc(m.publish_status||'DRAFT')+'</pre></div>'+
+   '<div class="detail-box"><strong>QC</strong><pre>'+esc(a.qc_status||'UNKNOWN')+'</pre></div>'+
+   '<div class="detail-box"><strong>Topic / Hook</strong><pre>'+esc(a.topic||'—')+'\n'+esc(a.hook||'—')+'</pre></div>'+
+   '<div class="detail-box"><strong>Caption</strong><pre>'+esc(m.caption||'—')+'</pre></div>'+
+   '<div class="detail-box"><strong>Description</strong><pre>'+esc(m.description||'—')+'</pre></div>'+
+   '<div class="detail-box"><strong>Hashtags</strong><pre>'+esc(Array.isArray(m.hashtags)?m.hashtags.join(' '):m.hashtags||'—')+'</pre></div>'+
+  '</div></div>';
  }catch(e){box.innerHTML='<div class="muted">Detail Content Package gagal dimuat: '+esc(e.message)+'</div>';}
 }
 loadRinaLibrary();
