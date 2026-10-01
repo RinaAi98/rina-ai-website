@@ -53,7 +53,8 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div class="msg">Siap. Backend chat akan dihubungkan melalui Brain/API.</div>
 </div><div class="composer"><input placeholder="Ketik pesan ke RINA..." disabled><button disabled>Kirim</button></div></div>
 </section>
-<section class="card" style="margin-top:18px"><h2>🎬 Creator Library</h2>
+<section class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin-bottom:0">🎬 Creator Library</h2><button id="refreshLibrary" style="border:0;border-radius:10px;padding:8px 12px;background:#eef2ff;color:#4338ca;cursor:pointer">↻ Refresh</button></div>
+<div id="libraryStatus" class="muted" style="margin:10px 0">Menghubungkan ke Cloud API…</div>
 <div id="libraryList" class="library-list"><div class="muted">Memuat Content Package…</div></div>
 <div id="contentDetail" style="display:none;margin-top:18px"></div>
 </section>
@@ -72,20 +73,27 @@ const API_KEY='sb_publishable_rLmRpjftumtGc2pOOFLBBA_n-KaxRnB';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,headers:{'apikey':API_KEY,'Authorization':'Bearer '+API_KEY,...(options.headers||{})},cache:'no-store'});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function loadRinaLibrary(){
- const list=document.getElementById('libraryList');
+ const list=document.getElementById('libraryList'), status=document.getElementById('libraryStatus');
+ status.textContent='Menghubungkan ke Cloud API…';
+ list.innerHTML='<div class="muted">Memuat Content Package…</div>';
  try{
-  const r=await apiFetch('/library?limit=50'); if(!r.ok) throw Error(r.status);
+  const r=await apiFetch('/library?limit=50'); if(!r.ok) throw Error('HTTP '+r.status);
   const d=await r.json(), a=d.items||[];
+  status.textContent='Cloud API tersambung • '+a.length+' Content Package';
   document.querySelector('.grid .card:nth-child(1) .value').textContent=a.length?'READY':'EMPTY';
   document.querySelector('.grid .card:nth-child(1) .muted').textContent=a.length+' Content Package';
-  document.querySelector('.grid .card:nth-child(2) .value').textContent=a.filter(i=>i.status==='READY_TO_POST').length;
+  document.querySelector('.grid .card:nth-child(2) .value').textContent=a.filter(i=>i.status==='READY_TO_POST'||i.status==='READY_TO_PUBLISH').length;
   if(!a.length){list.innerHTML='<div class="muted">Belum ada Content Package.</div>';return;}
   list.innerHTML=a.map(i=>`<div class="library-item" onclick="openContent('${esc(i.platform)}','${esc(i.content_id)}')">
    <strong>${esc(i.title||i.content_id)}</strong>
    <div class="library-meta"><span class="badge">${esc(i.platform)}</span><span class="badge">${esc(i.media_type||'media')}</span><span class="badge">${esc(i.status||'DRAFT')}</span><span class="badge">QC ${esc(i.qc?.status||'UNKNOWN')}</span></div>
   </div>`).join('');
   await openContent(a[0].platform,a[0].content_id);
- }catch(e){list.innerHTML='<div class="muted">API RINA offline. Jalankan rina_api.py untuk mode lokal.</div>';document.querySelector('.grid .card:nth-child(1) .value').textContent='OFFLINE';}
+ }catch(e){
+  status.textContent='Cloud API gagal diakses • coba Refresh';
+  list.innerHTML='<div class="muted">Content Library belum dapat mengambil data dari Cloud API. Data cloud tetap aman; tekan Refresh untuk mencoba lagi.</div>';
+  document.querySelector('.grid .card:nth-child(1) .value').textContent='OFFLINE';
+ }
 }
 async function loadPostingJobs(){
  const box=document.getElementById('postingList');
@@ -105,7 +113,7 @@ async function openContent(platform,id){
   const media=m.asset_url||m.cover_url||'';
   const type=String(m.media_type||'').toLowerCase();
   const preview=type.includes('image')?'<img class="media-preview" src="'+esc(media)+'" alt="Content preview">':'<video class="media-preview" controls preload="metadata" src="'+esc(media)+'"></video>';
-  box.innerHTML='<div class="library-detail"><h3>'+esc(m.title||id)+'</h3>'+preview+'<div class="detail-grid" style="margin-top:12px">'+
+  box.innerHTML='<div class="library-detail"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">'+esc(m.title||id)+'</h3><button onclick="runPreflight(\''+esc(id)+'\',\''+esc(platform)+'\')" style="border:0;border-radius:10px;padding:8px 12px;background:#111827;color:#fff;cursor:pointer">✓ Preflight</button></div><div id="preflightResult" class="muted" style="margin:10px 0">Preflight belum dijalankan.</div>'+preview+'<div class="detail-grid" style="margin-top:12px">'+
    '<div class="detail-box"><strong>Status</strong><pre>'+esc(m.publish_status||'DRAFT')+'</pre></div>'+
    '<div class="detail-box"><strong>QC</strong><pre>'+esc(a.qc_status||'UNKNOWN')+'</pre></div>'+
    '<div class="detail-box"><strong>Topic / Hook</strong><pre>'+esc(a.topic||'—')+'\n'+esc(a.hook||'—')+'</pre></div>'+
@@ -115,6 +123,21 @@ async function openContent(platform,id){
   '</div></div>';
  }catch(e){box.innerHTML='<div class="muted">Detail Content Package gagal dimuat: '+esc(e.message)+'</div>';}
 }
+async function runPreflight(id,platform){
+ const box=document.getElementById('preflightResult');
+ if(!box)return;
+ box.textContent='Menjalankan Preflight Gate…';
+ try{
+  const r=await apiFetch('/preflight/'+encodeURIComponent(id)+'?platform='+encodeURIComponent(platform));
+  if(!r.ok) throw Error('HTTP '+r.status);
+  const d=await r.json();
+  const blocked=(d.result||'BLOCKED')!=='READY_TO_POST';
+  const warnings=(d.warnings||[]).map(x=>esc(x)).join(' • ');
+  const checks=Object.entries(d.checks||{}).filter(([,v])=>v&&v.status).map(([k,v])=>esc(k)+': '+esc(v.status)).join(' · ');
+  box.innerHTML='<span class="badge '+(blocked?'wait':'ok')+'">'+esc(d.result||'BLOCKED')+'</span> <span class="muted">'+(d.publisher==='disabled'?'Publisher disabled — tidak ada publish/queue otomatis.':'Publisher siap.')+'</span>'+(warnings?'<div class="muted" style="margin-top:6px">Warning: '+warnings+'</div>':'')+'<div class="muted" style="margin-top:6px">'+checks+'</div>';
+ }catch(e){box.innerHTML='<span class="badge wait">PREFLIGHT ERROR</span> <span class="muted">'+esc(e.message)+'</span>';}
+}
+document.getElementById('refreshLibrary').addEventListener('click',()=>{loadRinaLibrary();loadPostingJobs();});
 loadRinaLibrary();
 loadPostingJobs();
 </script></body></html>
