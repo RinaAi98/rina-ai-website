@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RINA AI — Control Center</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#f6f7fb;color:#172033}
+header{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 20px;display:flex;justify-content:space-between}
+.logo{font-weight:800;font-size:22px}.logo span{color:#635bff}.badge{padding:5px 9px;border-radius:99px;background:#f3f4f6;font-size:12px}
+.layout{max-width:1200px;margin:auto;padding:20px;display:grid;grid-template-columns:210px 1fr;gap:20px}
+aside,.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px}aside{padding:10px;height:max-content;position:sticky;top:72px}
+nav button{width:100%;border:0;background:transparent;text-align:left;padding:11px;border-radius:10px;font:inherit;cursor:pointer}
+nav button.active,nav button:hover{background:#eef2ff;color:#4338ca}
+.hero{background:#111827;color:#fff;border-radius:18px;padding:24px;margin-bottom:18px}.hero p{color:#d1d5db}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.card{padding:18px}
+.label{color:#6b7280;font-size:13px}.value{font-size:24px;font-weight:800;margin:5px 0}.muted{color:#6b7280;font-size:13px}
+h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eef0f4}
+.ok{background:#ecfdf5;color:#047857}.wait{background:#fff7ed;color:#c2410c}
+.chat{height:210px;display:flex;flex-direction:column}.messages{flex:1;overflow:auto}
+.msg{padding:9px 12px;margin:6px 0;border-radius:12px;background:#f3f4f6;max-width:80%}.me{margin-left:auto;background:#eef2ff}
+.composer{display:flex;gap:8px}.composer input{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:10px}.composer button{border:0;border-radius:10px;padding:0 15px;background:#635bff;color:#fff}
+.preview{display:grid;grid-template-columns:150px 1fr;gap:15px}.thumb{height:95px;border-radius:10px;background:#e5e7eb;display:flex;align-items:center;justify-content:center}.library-list{display:grid;gap:10px}.library-item{border:1px solid #e5e7eb;border-radius:12px;padding:12px;cursor:pointer}.library-item:hover{background:#f8fafc}.library-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}.library-detail{border-top:1px solid #eef0f4;padding-top:16px}.media-preview{width:100%;max-height:420px;object-fit:contain;border-radius:12px;background:#111827}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{background:#f8fafc;border-radius:10px;padding:12px}.detail-box pre{white-space:pre-wrap;margin:6px 0 0;font:inherit}@media(max-width:650px){.detail-grid{grid-template-columns:1fr}}
+@media(max-width:850px){.layout{grid-template-columns:1fr}aside{position:static}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.grid{grid-template-columns:1fr}.preview{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="logo">RINA<span> AI</span></div><span class="badge wait">CONTROL CENTER — PREPARATION</span></header>
+<div class="layout">
+<aside><nav>
+<button class="active">💬 Chat</button>
+<button>🎬 Creator</button>
+<button>📚 Library</button>
+<button>📤 Posting Center</button>
+<button>📈 Trading</button>
+<button>🧠 Brain</button>
+<button>⚙️ System</button>
+</nav></aside>
+<main>
+<section class="hero"><h1>RINA Control Center</h1>
+<p>Web menjadi pusat akses RINA. Data nyata akan dihubungkan bertahap ke backend; halaman ini adalah shell awal.</p></section>
+<div class="grid">
+<div class="card"><div class="label">Creator</div><div class="value">READY</div><div class="muted">API pending</div></div>
+<div class="card"><div class="label">Posting</div><div class="value">0</div><div class="muted">Belum ada data live</div></div>
+<div class="card"><div class="label">Brain</div><div class="value">—</div><div class="muted">Health API pending</div></div>
+<div class="card"><div class="label">System</div><div class="value">—</div><div class="muted">Monitoring pending</div></div>
+</div>
+<section class="card"><h2>💬 Chat dengan RINA</h2>
+<div class="chat"><div class="messages">
+<div class="msg">Halo. Ini kerangka awal Control Center RINA.</div>
+<div class="msg me">Saya ingin semua skill RINA bisa dikontrol dari web.</div>
+<div class="msg">Siap. Backend chat akan dihubungkan melalui Brain/API.</div>
+</div><div class="composer"><input placeholder="Ketik pesan ke RINA..." disabled><button disabled>Kirim</button></div></div>
+</section>
+<section class="card" style="margin-top:18px"><h2>🎬 Creator Library</h2>
+<div id="libraryList" class="library-list"><div class="muted">Memuat Content Package…</div></div>
+<div id="contentDetail" style="display:none;margin-top:18px"></div>
+</section>
+<section class="card" style="margin-top:18px"><h2>📤 Posting Center</h2>
+<div class="row"><span>TikTok — Distribution Agent</span><span class="badge wait">PENDING</span></div>
+<div class="row"><span>Instagram</span><span class="badge">PLANNED</span></div>
+<div class="row"><span>YouTube Shorts</span><span class="badge">PLANNED</span></div>
+<div class="row"><span>Facebook</span><span class="badge">PLANNED</span></div>
+</section>
+<section class="card" style="margin-top:18px"><h2>🧠 Brain / System</h2>
+<div class="row"><span>Scheduler</span><span class="badge wait">API PENDING</span></div>
+<div class="row"><span>Skill Health</span><span class="badge wait">API PENDING</span></div>
+<div class="row"><span>Self-Healing</span><span class="badge">DESIGN</span></div>
+</section>
+</main></div><script>
+const API='http://127.0.0.1:8765';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function loadRinaLibrary(){
+ const list=document.getElementById('libraryList');
+ try{
+  const r=await fetch(API+'/creator/library?limit=50',{cache:'no-store'}); if(!r.ok) throw Error(r.status);
+  const d=await r.json(), a=d.items||[];
+  document.querySelector('.grid .card:nth-child(1) .value').textContent=a.length?'READY':'EMPTY';
+  document.querySelector('.grid .card:nth-child(1) .muted').textContent=a.length+' Content Package';
+  document.querySelector('.grid .card:nth-child(2) .value').textContent=a.filter(i=>i.status==='READY_TO_POST').length;
+  if(!a.length){list.innerHTML='<div class="muted">Belum ada Content Package.</div>';return;}
+  list.innerHTML=a.map(i=>`<div class="library-item" onclick="openContent('${esc(i.platform)}','${esc(i.content_id)}')">
+   <strong>${esc(i.title||i.content_id)}</strong>
+   <div class="library-meta"><span class="badge">${esc(i.platform)}</span><span class="badge">${esc(i.media_type||'media')}</span><span class="badge">${esc(i.status||'DRAFT')}</span><span class="badge">QC ${esc(i.qc?.status||'UNKNOWN')}</span></div>
+  </div>`).join('');
+  await openContent(a[0].platform,a[0].content_id);
+ }catch(e){list.innerHTML='<div class="muted">API RINA offline. Jalankan rina_api.py untuk mode lokal.</div>';document.querySelector('.grid .card:nth-child(1) .value').textContent='OFFLINE';}
+}
+async function openContent(platform,id){
+ const box=document.getElementById('contentDetail'); box.style.display='block'; box.innerHTML='<div class="muted">Memuat detail…</div>';
+ try{
+  const r=await fetch(API+'/creator/content/'+encodeURIComponent(platform)+'/'+encodeURIComponent(id)); if(!r.ok) throw Error(r.status);
+  const d=await r.json(), m=d.metadata||{}, q=d.qc||{}, p=d.publish||{};
+  const media=API+'/creator/media/'+encodeURIComponent(platform)+'/'+encodeURIComponent(id);
+  const type=String(m.media_type||'').toLowerCase();
+  const preview=type.includes('image')?`<img class="media-preview" src="${media}" alt="Content preview">`:`<video class="media-preview" controls preload="metadata" src="${media}"></video>`;
+  box.innerHTML=`<div class="library-detail"><h3>${esc(m.title||id)}</h3>${preview}<div class="detail-grid" style="margin-top:12px">
+   <div class="detail-box"><strong>Status</strong><pre>${esc(m.factory_status||d.status||'DRAFT')} · ${m.ready_for_uploader?'READY_TO_POST':'NOT_READY'}</pre></div>
+   <div class="detail-box"><strong>QC</strong><pre>${esc(q.status||'UNKNOWN')} · ${esc(q.resolution||'')}</pre></div>
+   <div class="detail-box"><strong>Script / Hook</strong><pre>${esc(m.script||m.hook||'—')}</pre></div>
+   <div class="detail-box"><strong>Caption</strong><pre>${esc(m.caption||'—')}</pre></div>
+   <div class="detail-box"><strong>Description</strong><pre>${esc(m.description||'—')}</pre></div>
+   <div class="detail-box"><strong>Hashtags</strong><pre>${esc(Array.isArray(m.hashtags)?m.hashtags.join(' '):m.hashtags||'—')}</pre></div>
+  </div></div>`;
+ }catch(e){box.innerHTML='<div class="muted">Detail Content Package gagal dimuat: '+esc(e.message)+'</div>';}
+}
+loadRinaLibrary();
+</script></body></html>
