@@ -58,10 +58,8 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div id="contentDetail" style="display:none;margin-top:18px"></div>
 </section>
 <section class="card" style="margin-top:18px"><h2>📤 Posting Center</h2>
-<div class="row"><span>TikTok — Distribution Agent</span><span class="badge wait">PENDING</span></div>
-<div class="row"><span>Instagram</span><span class="badge">PLANNED</span></div>
-<div class="row"><span>YouTube Shorts</span><span class="badge">PLANNED</span></div>
-<div class="row"><span>Facebook</span><span class="badge">PLANNED</span></div>
+<div id="postingList"><div class="muted">Memuat Distribution Agent…</div></div>
+<div class="muted" style="margin-top:10px">Mode aman: monitoring saja. Publisher tetap disabled sampai otorisasi platform siap.</div>
 </section>
 <section class="card" style="margin-top:18px"><h2>🧠 Brain / System</h2>
 <div class="row"><span>Scheduler</span><span class="badge wait">API PENDING</span></div>
@@ -89,6 +87,16 @@ async function loadRinaLibrary(){
   await openContent(a[0].platform,a[0].content_id);
  }catch(e){list.innerHTML='<div class="muted">API RINA offline. Jalankan rina_api.py untuk mode lokal.</div>';document.querySelector('.grid .card:nth-child(1) .value').textContent='OFFLINE';}
 }
+async function loadPostingJobs(){
+ const box=document.getElementById('postingList');
+ try{
+  const r=await apiFetch('/posting?limit=50'); if(!r.ok) throw Error(r.status);
+  const d=await r.json(), jobs=d.items||[];
+  document.querySelector('.grid .card:nth-child(2) .value').textContent=jobs.filter(j=>j.status==='QUEUED'||j.status==='PUBLISHING').length;
+  if(!jobs.length){box.innerHTML='<div class="muted">Belum ada distribution job.</div>';return;}
+  box.innerHTML=jobs.map(j=>'<div class="row"><span><strong>'+esc(j.platform)+'</strong> — '+esc(j.content_id)+'<br><small class="muted">'+esc(j.job_id)+'</small></span><span class="badge '+(j.status==='BLOCKED'||j.status==='FAILED'?'wait':'ok')+'">'+esc(j.status)+'</span></div>').join('');
+ }catch(e){box.innerHTML='<div class="muted">Distribution Agent API belum tersedia: '+esc(e.message)+'</div>';}
+}
 async function openContent(platform,id){
  const box=document.getElementById('contentDetail'); box.style.display='block'; box.innerHTML='<div class="muted">Memuat detail…</div>';
  try{
@@ -108,6 +116,7 @@ async function openContent(platform,id){
  }catch(e){box.innerHTML='<div class="muted">Detail Content Package gagal dimuat: '+esc(e.message)+'</div>';}
 }
 loadRinaLibrary();
+loadPostingJobs();
 </script></body></html>
 
 <!-- RINA Cloud API verification: 2026-10-01 -->
