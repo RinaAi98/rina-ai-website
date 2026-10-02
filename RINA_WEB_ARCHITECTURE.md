@@ -58,11 +58,29 @@ Agent tidak membuat konten.
 - Landing page dan flow TikTok lama tetap dijaga.
 - APK tetap freeze.
 
+## Control Plane Web → Brain
+Web tidak mengeksekusi skill secara langsung.
+1. User login melalui Supabase Auth.
+2. Web mengirim command terotorisasi ke `rina-control-api`.
+3. API memvalidasi command dan menyimpan ke `rina_control_commands`.
+4. Brain/worker mengambil command QUEUED, mengeksekusi sesuai registry/policy, lalu menulis hasil.
+5. Web membaca status/result command.
+
+Command awal yang diizinkan:
+- CHAT_MESSAGE
+- HEALTH_CHECK
+- CREATOR_STATUS
+- SYSTEM_STATUS
+- REQUEST_DAILY_CONTENT
+
+Publisher, trading execution, perubahan security/schema, dan perubahan source code tetap di luar jalur kontrol otomatis.
+
 ## Tahapan
 1. Web shell + navigation
 2. Auth/session
-3. Storage contract
-4. Creator library/media preview
+3. Control Plane Web → Brain
+4. Storage contract
+5. Creator library/media preview
 5. Chat
 6. Monitoring Brain/System
 7. Posting Center

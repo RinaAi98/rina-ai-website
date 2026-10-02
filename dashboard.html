@@ -26,7 +26,7 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 </style>
 </head>
 <body>
-<header><div class="logo">RINA<span> AI</span></div><span class="badge ok">CONTROL CENTER — CLOUD</span></header>
+<header><div class="logo">RINA<span> AI</span></div><div style="display:flex;align-items:center;gap:8px"><span id="authStatus" class="badge wait">NOT SIGNED IN</span><button id="authButton" style="border:0;border-radius:10px;padding:7px 11px;background:#111827;color:#fff;cursor:pointer">Login</button></div></header>
 <div class="layout">
 <aside><nav>
 <button class="active">💬 Chat</button>
@@ -39,7 +39,7 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 </nav></aside>
 <main>
 <section class="hero"><h1>RINA Control Center</h1>
-<p>Web menjadi pusat akses RINA. Data nyata akan dihubungkan bertahap ke backend; halaman ini adalah shell awal.</p></section>
+<p>Web menjadi pusat akses RINA. Control Plane cloud menghubungkan perintah pengguna ke Brain secara terotorisasi dan terukur.</p></section>
 <div class="grid">
 <div class="card"><div class="label">Creator</div><div class="value">READY</div><div class="muted">API pending</div></div>
 <div class="card"><div class="label">Posting</div><div class="value">0</div><div class="muted">Belum ada data live</div></div>
@@ -51,7 +51,7 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div class="msg">Halo. Ini kerangka awal Control Center RINA.</div>
 <div class="msg me">Saya ingin semua skill RINA bisa dikontrol dari web.</div>
 <div class="msg">Siap. Backend chat akan dihubungkan melalui Brain/API.</div>
-</div><div class="composer"><input placeholder="Ketik pesan ke RINA..." disabled><button disabled>Kirim</button></div></div>
+</div><div class="composer"><input id="chatInput" placeholder="Login untuk mengirim perintah ke RINA..." disabled><button id="chatSend" disabled>Kirim</button></div></div>
 </section>
 <section class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin-bottom:0">🎬 Creator Library</h2><button id="refreshLibrary" style="border:0;border-radius:10px;padding:8px 12px;background:#eef2ff;color:#4338ca;cursor:pointer">↻ Refresh</button></div>
 <div id="libraryStatus" class="muted" style="margin:10px 0">Menghubungkan ke Cloud API…</div>
@@ -67,7 +67,18 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div class="row"><span>Skill Health</span><span class="badge wait">API PENDING</span></div>
 <div class="row"><span>Self-Healing</span><span class="badge">DESIGN</span></div>
 </section>
-</main></div><script>
+</main></div>
+<div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:10;align-items:center;justify-content:center;padding:20px">
+ <div class="card" style="width:min(420px,100%);padding:22px">
+  <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">🔐 Akses RINA Web</h2><button id="authClose" style="border:0;background:transparent;font-size:20px;cursor:pointer">×</button></div>
+  <p class="muted">Login diperlukan sebelum web dapat mengirim perintah ke RINA Brain.</p>
+  <input id="authEmail" type="email" placeholder="Email" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px;margin-bottom:8px">
+  <input id="authPassword" type="password" placeholder="Password" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:10px">
+  <div style="display:flex;gap:8px;margin-top:12px"><button id="loginBtn" style="flex:1;border:0;border-radius:10px;padding:10px;background:#635bff;color:#fff;cursor:pointer">Login</button><button id="signupBtn" style="border:0;border-radius:10px;padding:10px;background:#eef2ff;color:#4338ca;cursor:pointer">Daftar</button></div>
+  <div id="authMessage" class="muted" style="margin-top:10px"></div>
+ </div>
+</div>
+<script>
 const API='https://vpjwawmeszcwfjyefgms.supabase.co/functions/v1/rina-content-api';
 const API_KEY='sb_publishable_rLmRpjftumtGc2pOOFLBBA_n-KaxRnB';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,headers:{'apikey':API_KEY,'Authorization':'Bearer '+API_KEY,...(options.headers||{})},cache:'no-store'});
@@ -140,6 +151,62 @@ async function runPreflight(id,platform){
 document.getElementById('refreshLibrary').addEventListener('click',()=>{loadRinaLibrary();loadPostingJobs();});
 loadRinaLibrary();
 loadPostingJobs();
+</script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+
+const SUPABASE_URL='https://vpjwawmeszcwfjyefgms.supabase.co';
+const SUPABASE_KEY='sb_publishable_rLmRpjftumtGc2pOOFLBBA_n-KaxRnB';
+const CONTROL_API=SUPABASE_URL+'/functions/v1/rina-control-api';
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const $=id=>document.getElementById(id);
+const authModal=$('authModal'), authStatus=$('authStatus'), authButton=$('authButton');
+const input=$('chatInput'), send=$('chatSend'), messages=document.querySelector('.messages');
+function setAuthUI(session){
+  const signed=!!session?.user;
+  authStatus.textContent=signed?'SIGNED IN':'NOT SIGNED IN';
+  authStatus.className='badge '+(signed?'ok':'wait');
+  authButton.textContent=signed?'Logout':'Login';
+  input.disabled=!signed; send.disabled=!signed;
+  input.placeholder=signed?'Ketik pesan/perintah ke RINA…':'Login untuk mengirim perintah ke RINA...';
+}
+function showAuth(msg=''){ authModal.style.display='flex'; $('authMessage').textContent=msg; }
+function closeAuth(){ authModal.style.display='none'; }
+async function refreshAuth(){ const {data}=await supabase.auth.getSession(); setAuthUI(data.session); return data.session; }
+authButton.onclick=async()=>{ const s=await refreshAuth(); if(s) await supabase.auth.signOut(); else showAuth(); };
+$('authClose').onclick=closeAuth;
+$('loginBtn').onclick=async()=>{
+ const email=$('authEmail').value.trim(), password=$('authPassword').value;
+ $('authMessage').textContent='Memproses login…';
+ const {data,error}=await supabase.auth.signInWithPassword({email,password});
+ if(error){$('authMessage').textContent=error.message;return;}
+ closeAuth(); setAuthUI(data.session);
+};
+$('signupBtn').onclick=async()=>{
+ const email=$('authEmail').value.trim(), password=$('authPassword').value;
+ if(password.length<6){$('authMessage').textContent='Password minimal 6 karakter.';return;}
+ $('authMessage').textContent='Membuat akun…';
+ const {data,error}=await supabase.auth.signUp({email,password});
+ if(error){$('authMessage').textContent=error.message;return;}
+ $('authMessage').textContent=data.session?'Akun dibuat dan login.':'Akun dibuat. Jika email confirmation aktif, cek email lalu login.';
+ if(data.session){closeAuth();setAuthUI(data.session);}
+};
+supabase.auth.onAuthStateChange((_event,session)=>setAuthUI(session));
+send.onclick=async()=>{
+ const text=input.value.trim(); if(!text)return;
+ const session=(await supabase.auth.getSession()).data.session;
+ if(!session){showAuth('Login diperlukan.');return;}
+ const bubble=document.createElement('div'); bubble.className='msg me'; bubble.textContent=text; messages.appendChild(bubble); input.value='';
+ const pending=document.createElement('div'); pending.className='msg'; pending.textContent='RINA menerima perintah…'; messages.appendChild(pending);
+ try{
+  const r=await fetch(CONTROL_API+'/command',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY},body:JSON.stringify({command_type:'CHAT_MESSAGE',payload:{message:text,source:'web'}})});
+  const d=await r.json(); if(!r.ok)throw Error(d.error||('HTTP '+r.status));
+  pending.textContent='Perintah masuk antrean Brain • '+d.command.command_id;
+ }catch(e){pending.textContent='Gagal mengirim perintah: '+e.message;}
+ messages.scrollTop=messages.scrollHeight;
+};
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send.click();}});
+refreshAuth();
 </script></body></html>
 
 <!-- RINA Cloud API verification: 2026-10-01 -->
