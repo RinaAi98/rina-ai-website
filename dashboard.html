@@ -62,10 +62,11 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div id="postingList"><div class="muted">Memuat Distribution Agent…</div></div>
 <div class="muted" style="margin-top:10px">Mode aman: monitoring saja. Publisher tetap disabled sampai otorisasi platform siap.</div>
 </section>
-<section class="card" style="margin-top:18px"><h2>🧠 Brain / System</h2>
-<div class="row"><span>Scheduler</span><span class="badge wait">API PENDING</span></div>
-<div class="row"><span>Skill Health</span><span class="badge wait">API PENDING</span></div>
-<div class="row"><span>Self-Healing</span><span class="badge">DESIGN</span></div>
+<section class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin-bottom:0">🧠 Brain / System Monitor</h2><button id="refreshSystem" style="border:0;border-radius:10px;padding:8px 12px;background:#eef2ff;color:#4338ca;cursor:pointer">↻ Refresh</button></div>
+<div id="systemStatus" class="muted" style="margin:10px 0">Login diperlukan untuk membaca status cloud.</div>
+<div id="healthRows"><div class="row"><span>Brain</span><span class="badge wait">WAITING</span></div></div>
+<h3 style="margin:18px 0 8px">Command Queue</h3>
+<div id="commandRows"><div class="muted">Belum ada data command.</div></div>
 </section>
 </main></div>
 <div id="authModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:10;align-items:center;justify-content:center;padding:20px">
@@ -172,7 +173,48 @@ function setAuthUI(session){
 }
 function showAuth(msg=''){ authModal.style.display='flex'; $('authMessage').textContent=msg; }
 function closeAuth(){ authModal.style.display='none'; }
-async function refreshAuth(){ const {data}=await supabase.auth.getSession(); setAuthUI(data.session); return data.session; }
+function statusClass(status){
+  const s=String(status||'').toUpperCase();
+  return (s==='HEALTHY'||s==='SUCCEEDED'||s==='READY'||s==='PASS')?'ok':'wait';
+}
+async function loadSystemMonitor(){
+  const session=(await supabase.auth.getSession()).data.session;
+  const statusBox=$('systemStatus'), rows=$('healthRows'), commands=$('commandRows');
+  if(!session){
+    statusBox.textContent='Login diperlukan untuk membaca status cloud.';
+    rows.innerHTML='<div class="row"><span>Brain</span><span class="badge wait">WAITING</span></div>';
+    commands.innerHTML='<div class="muted">Login untuk melihat command queue.</div>';
+    return;
+  }
+  statusBox.textContent='Membaca Brain heartbeat dan command queue…';
+  try{
+    const r=await fetch(CONTROL_API+'/overview',{headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY},cache:'no-store'});
+    const d=await r.json(); if(!r.ok) throw Error(d.error||('HTTP '+r.status));
+    const items=d.status||[];
+    rows.innerHTML=items.length?items.map(i=>{
+      const detail=i.details&&typeof i.details==='object'?i.details:{};
+      const extra=i.component==='control_worker'?('poll '+esc(detail.poll_seconds??'—')+'s'):('checked '+esc(i.checked_at||'—'));
+      return '<div class="row"><span><strong>'+esc(i.component)+'</strong><br><small class="muted">'+extra+'</small></span><span class="badge '+statusClass(i.status)+'">'+esc(i.status)+'</span></div>';
+    }).join(''):'<div class="muted">Belum ada heartbeat. Control Worker belum mempublikasikan status cloud.</div>';
+    const cmds=d.commands||[];
+    commands.innerHTML=cmds.length?cmds.map(c=>{
+      const cls=statusClass(c.status);
+      const err=c.error?'<div class="muted">'+esc(c.error)+'</div>':'';
+      return '<div class="row"><span><strong>'+esc(c.command_type)+'</strong><br><small class="muted">'+esc(c.created_at||'')+'</small>'+err+'</span><span class="badge '+cls+'">'+esc(c.status)+'</span></div>';
+    }).join(''):'<div class="muted">Belum ada command.</div>';
+    const brain=items.find(i=>i.component==='brain');
+    document.querySelector('.grid .card:nth-child(3) .value').textContent=brain?.status||'—';
+    document.querySelector('.grid .card:nth-child(3) .muted').textContent=brain?'Cloud heartbeat':'Menunggu worker';
+    const worker=items.find(i=>i.component==='control_worker');
+    document.querySelector('.grid .card:nth-child(4) .value').textContent=worker?.status||'—';
+    document.querySelector('.grid .card:nth-child(4) .muted').textContent=worker?'Worker heartbeat':'Monitoring pending';
+    statusBox.textContent='Cloud monitor tersambung • '+items.length+' komponen';
+  }catch(e){
+    statusBox.textContent='Monitor gagal diakses • '+e.message;
+    rows.innerHTML='<div class="row"><span>Cloud Monitor</span><span class="badge wait">ERROR</span></div>';
+  }
+}
+async function refreshAuth(){ const {data}=await supabase.auth.getSession(); setAuthUI(data.session); await loadSystemMonitor(); return data.session; }
 authButton.onclick=async()=>{ const s=await refreshAuth(); if(s) await supabase.auth.signOut(); else showAuth(); };
 $('authClose').onclick=closeAuth;
 $('loginBtn').onclick=async()=>{
@@ -191,7 +233,8 @@ $('signupBtn').onclick=async()=>{
  $('authMessage').textContent=data.session?'Akun dibuat dan login.':'Akun dibuat. Jika email confirmation aktif, cek email lalu login.';
  if(data.session){closeAuth();setAuthUI(data.session);}
 };
-supabase.auth.onAuthStateChange((_event,session)=>setAuthUI(session));
+supabase.auth.onAuthStateChange((_event,session)=>{setAuthUI(session);loadSystemMonitor();});
+$('refreshSystem').onclick=loadSystemMonitor;
 send.onclick=async()=>{
  const text=input.value.trim(); if(!text)return;
  const session=(await supabase.auth.getSession()).data.session;
