@@ -62,7 +62,8 @@ h2{font-size:19px;margin-top:0}.row{display:flex;justify-content:space-between;g
 <div id="postingList"><div class="muted">Memuat Distribution Agent…</div></div>
 <div class="muted" style="margin-top:10px">Mode aman: monitoring saja. Publisher tetap disabled sampai otorisasi platform siap.</div>
 </section>
-<section class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin-bottom:0">🧠 Brain / System Monitor</h2><button id="refreshSystem" style="border:0;border-radius:10px;padding:8px 12px;background:#eef2ff;color:#4338ca;cursor:pointer">↻ Refresh</button></div>
+<section class="card" style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin-bottom:0">🧠 Brain / System Monitor</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="healthCheck" style="border:0;border-radius:10px;padding:8px 12px;background:#111827;color:#fff;cursor:pointer">♥ HEALTH_CHECK</button><button id="refreshSystem" style="border:0;border-radius:10px;padding:8px 12px;background:#eef2ff;color:#4338ca;cursor:pointer">↻ Refresh</button></div></div>
+<div id="globalMonitor" class="detail-grid" style="margin:12px 0"><div class="detail-box"><strong>Creator</strong><pre id="creatorMonitor">—</pre></div><div class="detail-box"><strong>Posting</strong><pre id="postingMonitor">—</pre></div><div class="detail-box"><strong>Video Engine</strong><pre id="videoMonitor">—</pre></div><div class="detail-box"><strong>Trading</strong><pre id="tradingMonitor">—</pre></div></div>
 <div id="systemStatus" class="muted" style="margin:10px 0">Login diperlukan untuk membaca status cloud.</div>
 <div id="healthRows"><div class="row"><span>Brain</span><span class="badge wait">WAITING</span></div></div>
 <h3 style="margin:18px 0 8px">Command Queue</h3>
@@ -159,6 +160,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 const SUPABASE_URL='https://vpjwawmeszcwfjyefgms.supabase.co';
 const SUPABASE_KEY='sb_publishable_rLmRpjftumtGc2pOOFLBBA_n-KaxRnB';
 const CONTROL_API=SUPABASE_URL+'/functions/v1/rina-control-api';
+const WEB_MONITOR=SUPABASE_URL+'/functions/v1/rina-web-monitor';
 const supabase=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 const authModal=$('authModal'), authStatus=$('authStatus'), authButton=$('authButton');
@@ -249,7 +251,36 @@ send.onclick=async()=>{
  messages.scrollTop=messages.scrollHeight;
 };
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send.click();}});
-refreshAuth();
+async function rinaMonitorFetch(action,session,options={}){
+ const r=await fetch(WEB_MONITOR+'?action='+encodeURIComponent(action),{...options,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json',...(options.headers||{})},cache:'no-store'});
+ const d=await r.json().catch(()=>({})); if(!r.ok) throw Error(d.reason||d.error||('HTTP '+r.status)); return d;
+}
+async function rinaCommand(type,payload={}){
+ const session=(await supabase.auth.getSession()).data.session; if(!session){showAuth('Login diperlukan.');return null;}
+ return rinaMonitorFetch('command',session,{method:'POST',body:JSON.stringify({command_type:type,payload})});
+}
+async function rinaFullMonitor(){
+ const session=(await supabase.auth.getSession()).data.session; if(!session)return;
+ const box=$('systemStatus'), rows=$('healthRows'), cmds=$('commandRows');
+ try{
+  box.textContent='Membaca seluruh status RINA…';
+  const d=await rinaMonitorFetch('dashboard',session);
+  const items=d.system||[], list=d.commands||[], arts=(d.creator||{}).artifacts||[], jobs=(d.creator||{}).publish_jobs||[], vids=d.video_jobs||[];
+  rows.innerHTML=items.length?items.map(i=>'<div class="row"><span><strong>'+esc(i.component)+'</strong><br><small class="muted">'+esc(i.checked_at||'')+'</small></span><span class="badge '+statusClass(i.status)+'">'+esc(i.status)+'</span></div>').join(''):'<div class="muted">Belum ada heartbeat.</div>';
+  cmds.innerHTML=list.length?list.map(c=>'<div class="row"><span><strong>'+esc(c.command_type)+'</strong><br><small class="muted">'+esc(c.created_at||'')+'</small></span><span class="badge '+statusClass(c.status)+'">'+esc(c.status)+'</span></div>').join(''):'<div class="muted">Belum ada command.</div>';
+  $('creatorMonitor').textContent=arts.length+' artifact(s)';
+  $('postingMonitor').textContent=jobs.length+' publish job(s)';
+  $('videoMonitor').textContent=vids.length+' video job(s)';
+  $('tradingMonitor').textContent='MONITOR_ONLY • LIVE OFF • READ_ONLY';
+  document.querySelector('.grid .card:nth-child(3) .value').textContent=(items.find(i=>i.component==='brain')||{}).status||'—';
+  document.querySelector('.grid .card:nth-child(4) .value').textContent=(items.find(i=>i.component==='control_worker')||{}).status||'—';
+  box.textContent='Cloud monitor tersambung • '+items.length+' komponen';
+ }catch(e){box.textContent='Monitor gagal diakses • '+e.message;}
+}
+$('healthCheck').onclick=async()=>{try{$('systemStatus').textContent='Mengirim HEALTH_CHECK…';const d=await rinaCommand('HEALTH_CHECK',{source:'web'});$('systemStatus').textContent='HEALTH_CHECK masuk queue • '+(d.command?.command_id||'OK');setTimeout(rinaFullMonitor,1500);}catch(e){$('systemStatus').textContent='HEALTH_CHECK gagal • '+e.message;}};
+$('refreshSystem').onclick=rinaFullMonitor;
+send.onclick=async()=>{const text=input.value.trim();if(!text)return;const bubble=document.createElement('div');bubble.className='msg me';bubble.textContent=text;messages.appendChild(bubble);input.value='';const pending=document.createElement('div');pending.className='msg';pending.textContent='RINA menerima perintah…';messages.appendChild(pending);try{const d=await rinaCommand('CHAT_MESSAGE',{message:text,source:'web'});pending.textContent='Perintah masuk antrean Brain • '+(d.command?.command_id||'OK');setTimeout(rinaFullMonitor,1200);}catch(e){pending.textContent='Gagal mengirim perintah: '+e.message;}messages.scrollTop=messages.scrollHeight;};
+refreshAuth().then(()=>rinaFullMonitor());
 </script></body></html>
 
 <!-- RINA Cloud API verification: 2026-10-01 -->
